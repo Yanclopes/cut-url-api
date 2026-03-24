@@ -2,7 +2,7 @@ name: Deploy Multi-Ambiente
 
 on:
   push:
-    branches: [ main, qa, dev ] # Gatilhos para as 3 branches
+    branches: [ master, qa, dev ] # Gatilhos para as 3 branches
 
 jobs:
   build-and-deploy:
@@ -12,7 +12,7 @@ jobs:
     env:
       CURRENT_BRANCH: ${{ github.ref_name }}
       # Define o workspace: main vira 'prod', as outras mantêm o nome
-      TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+      TF_WORKSPACE: ${{ github.ref_name == 'master' && 'prod' || github.ref_name }}
 
     steps:
       - name: Checkout
