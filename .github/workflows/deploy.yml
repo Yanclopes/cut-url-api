@@ -1,26 +1,51 @@
-name: Deploy NestJS to AWS
+name: Deploy Multi-Ambiente
 
 on:
   push:
-    branches: [ master ]
-  workflow_dispatch:
+    branches: [ main, qa, dev ] # Gatilhos para as 3 branches
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
+    # Mapeamento de Branch -> Workspace
+    env:
+      CURRENT_BRANCH: ${{ github.ref_name }}
+      # Define o workspace: main vira 'prod', as outras mantêm o nome
+      TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+
     steps:
-      - name: Checkout do código
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login no Docker Hub
+      # 1. BUILD DOCKER (Com tag por ambiente)
+      - name: Login Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build e Push da imagem
+      - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cut-url-api:latest
+          # Gera tags como: meu-app:prod, meu-app:qa, meu-app:dev
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/meu-projeto:${{ env.TF_WORKSPACE }}
+
+      # 2. CONFIGURAR AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      # 3. AVISAR O AUTO SCALING (Instance Refresh)
+      - name: Refresh ASG Instances
+        run: |
+          # O nome do ASG no seu Terraform é "asg-${terraform.workspace}"
+          # O GitHub vai rodar: asg-prod, asg-qa ou asg-dev
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "asg-${{ env.TF_WORKSPACE }}"
