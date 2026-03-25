@@ -31,7 +31,7 @@ jobs:
           context: .
           push: true
           # Gera tags como: meu-app:prod, meu-app:qa, meu-app:dev
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/meu-projeto:${{ env.TF_WORKSPACE }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cut-url-api${{ env.TF_WORKSPACE }}
 
       # 2. CONFIGURAR AWS
       - name: Configure AWS Credentials
