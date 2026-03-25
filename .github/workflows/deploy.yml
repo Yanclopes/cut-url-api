@@ -42,7 +42,7 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      # 3. AVISAR O AUTO SCALING (Instance Refresh)
+      # 3. AVISAR O AUTO SCALING
       - name: Refresh ASG Instances
         run: |
           # O nome do ASG no seu Terraform é "asg-${terraform.workspace}"
