@@ -11,7 +11,6 @@ async function bootstrap() {
       .setVersion('1.0')
       .addTag('links')
       .build();
-  app.setGlobalPrefix('api')
 
   const document = SwaggerModule.createDocument(app, config);
 
