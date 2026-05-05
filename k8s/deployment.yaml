@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cut-url-api
+  namespace: cut-url
+  labels:
+    app: cut-url-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cut-url-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: cut-url-api
+    spec:
+      # imagePullSecrets preenchido pelo GitHub Actions no primeiro deploy
+      imagePullSecrets:
+        - name: dockerhub-secret
+      initContainers:
+        - name: migrate
+          image: yanclops/cut-url-api:latest  # atualizado pelo CI
+          command: ["npx", "prisma", "migrate", "deploy"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cut-url-api-secrets
+                  key: DATABASE_URL
+      containers:
+        - name: api
+          image: yanclops/cut-url-api:latest  # atualizado pelo CI
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cut-url-api-secrets
+                  key: DATABASE_URL
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
