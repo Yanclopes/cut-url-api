@@ -13,10 +13,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Copia tudo do builder para garantir que o prisma CLI (devDep) fique disponível
+# para o initContainer rodar as migrations
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
-# Apenas prod deps para imagem menor
-RUN npm ci --omit=dev
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
