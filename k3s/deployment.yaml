@@ -24,7 +24,7 @@ spec:
         - name: dockerhub-secret
       initContainers:
         - name: migrate
-          image: yanclops/cut-url-api:latest
+          image: yanclops/cut-url-api:a642bb3
           command: ["npx", "prisma", "migrate", "deploy"]
           env:
             - name: DATABASE_URL
@@ -34,7 +34,7 @@ spec:
                   key: DATABASE_URL
       containers:
         - name: api
-          image: yanclops/cut-url-api:latest
+          image: yanclops/cut-url-api:a642bb3
           ports:
             - containerPort: 3000
           env:
